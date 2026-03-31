@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="MUSEUM">
+    
+    <title>MUSEUM PREMIUM 2026</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,200;0,900;1,400&family=Lato:wght@300;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --amber: #f2ba49;
+            --bg: #0a0a0a;
+            --serif: 'Playfair Display', serif;
+            --sans: 'Lato', sans-serif;
+        }
+
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        
+        body, html { 
+            margin: 0; padding: 0; height: 100%; width: 100%; 
+            background: var(--bg); color: #fff; font-family: -apple-system, sans-serif;
+            overflow: hidden;
+            /* 防止頁面在 PWA 模式下意外捲動 */
+            position: fixed;
+        }
+
+        .main-container {
+            height: 100%; width: 100vw;
+            display: flex;
+            overflow-y: hidden; overflow-x: auto;
+            scroll-snap-type: x mandatory;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .page {
+            flex: 0 0 100vw; height: 100%;
+            scroll-snap-align: start;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* 目錄頁：避開頂部安全區 */
+        .index-page { 
+            background: #fff; color: #000; 
+            padding-top: calc(env(safe-area-inset-top) + 20px); 
+            padding-left: 30px; padding-right: 30px;
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+        .index-header { font-family: var(--serif); font-size: 3rem; border-bottom: 5px solid #000; margin-bottom: 30px; font-weight: 900; }
+        .menu-list { height: 70vh; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
+
+        .actress-photo-container {
+            width: 100%; height: 100%;
+            overflow-y: auto;
+            scroll-snap-type: y mandatory;
+            background: #000;
+        }
+        .full-img {
+            width: 100%; height: 100%;
+            object-fit: cover;
+            scroll-snap-align: start;
+            display: block;
+        }
+
+        /* 頂部遮罩：高度隨 Safe Area 自動調整 */
+        .profile-header-mask {
+            position: absolute; top: 0; left: 0; width: 100%;
+            height: calc(env(safe-area-inset-top) + 100px);
+            background: linear-gradient(to bottom, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0) 100%);
+            z-index: 5; pointer-events: none;
+        }
+
+        /* 毛玻璃卡片：修正底部距離，確保在所有 iPhone 機型都不會太低 */
+        .info-card {
+            position: absolute; 
+            bottom: calc(env(safe-area-inset-bottom) + 120px); /* 增加底部間距 */
+            left: 20px; right: 20px; 
+            background: rgba(0, 0, 0, 0.3); 
+            -webkit-backdrop-filter: blur(40px) saturate(200%);
+            backdrop-filter: blur(40px) saturate(200%);
+            border-radius: 30px; 
+            padding: 26px; 
+            border: 1px solid rgba(255,255,255,0.2); 
+            z-index: 10;
+        }
+
+        .card-name { 
+            font-family: var(--serif); font-size: 1.8rem; color: var(--amber); 
+            margin: 0; letter-spacing: 4px; font-weight: 400; 
+            text-shadow: 0 2px 8px rgba(0,0,0,0.4); 
+        }
+        
+        .data-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-top: 20px; text-align: center; }
+        .v { font-family: var(--sans); font-weight: 400; color: #fff; display: block; font-size: 1.4rem; text-shadow: 0 1px 5px rgba(0,0,0,0.6); }
+        .label { font-size: 0.65rem; color: rgba(255,255,255,0.85); letter-spacing: 3px; text-transform: uppercase; font-weight: 700; text-shadow: 0 1px 3px rgba(0,0,0,0.5); }
+
+        /* 回目錄按鈕：完美避開底部的 Home Bar */
+        .btn-back {
+            position: absolute; 
+            bottom: calc(env(safe-area-inset-bottom) + 40px); /* 使用系統變數自動留白 */
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 12px 40px;
+            background: var(--amber); 
+            color: #000;
+            border-radius: 50px; 
+            border: none;
+            font-weight: 800; font-size: 0.85rem;
+            z-index: 20;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
+        }
+    </style>
+</head>
+<body>
+
+<div class="main-container" id="mainContainer">
+    <div class="page index-page">
+        <div class="index-header">CONTENTS</div>
+        <div id="menuList" class="menu-list"></div>
+    </div>
+</div>
+
+<script>
+// 使用你目前的 14 位女神數據
+const actressData = [
+    { name: "瀨戶環奈", h: 170, cup: "J", bwh: "101-59-91", photoCount: 3 },
+    { name: "櫻空桃", h: 160, cup: "G", bwh: "90-55-86", photoCount: 5 },
+    { name: "三田真鈴", h: 157, cup: "F", bwh: "77-55-89", photoCount: 4 },
+    { name: "涼森玲夢", h: 160, cup: "F", bwh: "87-58-85", photoCount: 4 },
+    { name: "石川澪", h: 158, cup: "B", bwh: "78-56-85", photoCount: 4 },
+    { name: "鷲尾芽衣", h: 165, cup: "J", bwh: "104-59-89", photoCount: 3 },
+    { name: "村上悠華", h: 163, cup: "E", bwh: "85-59-88", photoCount: 4 },
+    { name: "五日市芽依", h: 161, cup: "G", bwh: "88-59-89", photoCount: 4 },
+    { name: "miru", h: 157, cup: "E", bwh: "82-54-84", photoCount: 4 },
+    { name: "七嶋 舞", h: 160, cup: "D", bwh: "84-58-85", photoCount: 4 },
+    { name: "長浜蜜璃", h: 161, cup: "G", bwh: "90-58-90", photoCount: 4 },
+    { name: "三佳詩", h: 165, cup: "F", bwh: "85-55-87", photoCount: 4 },
+    { name: "福田悠亞", h: 162, cup: "H", bwh: "90-55-90", photoCount: 4 },
+    { name: "西宮夢", h: 158, cup: "D", bwh: "85-56-86", photoCount: 4 }
+];
+
+const container = document.getElementById('mainContainer');
+const menuList = document.getElementById('menuList');
+
+actressData.forEach((item, index) => {
+    const pageId = index + 1; // 修正索引，目錄是第 0 頁
+    const actressNum = index + 1; 
+    
+    // 生成目錄項目
+    const menuLink = document.createElement('div');
+    styleMenuItem(menuLink);
+    menuLink.innerHTML = `<div><span style="color:var(--amber); font-weight:900; margin-right:15px;">${String(actressNum).padStart(2,'0')}</span> ${item.name}</div> <div>→</div>`;
+    menuLink.onclick = () => container.scrollTo({ left: window.innerWidth * pageId, behavior: 'smooth' });
+    menuList.appendChild(menuLink);
+
+    // 生成照片
+    let photosHTML = "";
+    for (let i = 1; i <= item.photoCount; i++) {
+        photosHTML += `<img src="img/${actressNum}-${i}.jpg" class="full-img" onerror="this.src='https://via.placeholder.com/800x1200?text=COMING+SOON';">`;
+    }
+
+    // 生成分頁
+    const page = document.createElement('div');
+    page.className = 'page';
+    page.innerHTML = `
+        <div class="profile-header-mask"></div>
+        <div class="actress-photo-container">${photosHTML}</div>
+        <div class="info-card">
+            <h2 class="card-name">${item.name}</h2>
+            <div style="font-size:0.8rem; color:rgba(255,255,255,0.8); margin-top:4px; font-family:var(--sans); text-shadow: 0 1px 3px rgba(0,0,0,0.5);">${item.h}cm / ${item.cup} Cup</div>
+            <div class="data-grid">
+                <div class="data-item"><span class="label">Bust</span><span class="v">${item.bwh.split('-')[0]}</span></div>
+                <div class="data-item"><span class="label">Waist</span><span class="v">${item.bwh.split('-')[1]}</span></div>
+                <div class="data-item"><span class="label">Hips</span><span class="v">${item.bwh.split('-')[2]}</span></div>
+            </div>
+        </div>
+        <button class="btn-back" onclick="goHome()">BACK TO CONTENTS</button>
+    `;
+    container.appendChild(page);
+});
+
+function styleMenuItem(el) {
+    el.style.padding = '20px'; el.style.border = '1px solid #eee'; el.style.borderRadius = '12px';
+    el.style.display = 'flex'; el.style.justifyContent = 'space-between'; el.style.alignItems = 'center';
+    el.style.fontFamily = 'var(--serif)'; el.style.fontSize = '1.2rem';
+}
+
+function goHome() { container.scrollTo({ left: 0, behavior: 'smooth' }); }
+</script>
+</body>
+</html>
