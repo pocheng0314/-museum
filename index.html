@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>MUSEUM 2026</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Lato:wght@300;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --amber: #f2ba49;
+            --serif: 'Playfair Display', serif;
+            --sans: 'Lato', sans-serif;
+            /* 抓取 iPhone 物理安全區域 */
+            --safe-top: env(safe-area-inset-top, 50px);
+            --safe-bottom: env(safe-area-inset-bottom, 30px);
+        }
+
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        
+        /* 1. 核心鋪滿：鎖定 body 高度 */
+        body, html { 
+            margin: 0; padding: 0; 
+            height: 100%; width: 100%; 
+            background: #000; color: #fff;
+            overflow: hidden; 
+            position: fixed; /* 防止下拉橡皮筋回彈 */
+        }
+
+        /* 2. 容器：強制填滿螢幕 */
+        .main-container {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            display: flex; 
+            overflow-x: auto; 
+            overflow-y: hidden;
+            scroll-snap-type: x mandatory;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .page { 
+            flex: 0 0 100vw; 
+            width: 100vw; 
+            height: 100%; 
+            position: relative; 
+            scroll-snap-align: start; 
+            overflow: hidden; 
+        }
+
+        /* --- 封面頁：背景鋪滿 --- */
+        .cover-page {
+            background: #000 url('./img/cover.jpg') center center / cover no-repeat;
+            display: flex; flex-direction: column; justify-content: space-between;
+            padding: calc(var(--safe-top) + 30px) 30px calc(var(--safe-bottom) + 50px) 30px;
+            height: 100%;
+        }
+        .cover-masthead h1 { font-family: var(--serif); font-size: 5.5rem; margin: 0; line-height: 0.8; letter-spacing: -2px; }
+        .cover-footer h2 { font-family: var(--serif); font-size: 4rem; margin: 0; line-height: 1; }
+
+        /* --- 目錄頁 --- */
+        .index-page { 
+            background: #fff; color: #000; 
+            padding: calc(var(--safe-top) + 20px) 25px 0 25px;
+            display: flex; flex-direction: column; height: 100%;
+        }
+        .index-header { font-family: var(--serif); font-size: 3.2rem; border-bottom: 6px solid #000; margin-bottom: 20px; font-weight: 900; }
+        .menu-list { 
+            flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; 
+            padding-bottom: 120px;
+        }
+        .menu-item { 
+            padding: 20px; border: 1px solid #f0f0f0; border-radius: 12px; 
+            display: flex; justify-content: space-between; align-items: center; 
+            font-family: var(--serif); font-size: 1.1rem;
+        }
+
+        /* --- 內容分頁：照片垂直滾動鋪滿 --- */
+        .actress-photo-container { 
+            width: 100%; height: 100%; 
+            overflow-y: auto; scroll-snap-type: y mandatory; 
+            background: #000;
+            -ms-overflow-style: none; scrollbar-width: none;
+        }
+        .actress-photo-container::-webkit-scrollbar { display: none; }
+
+        .full-img { 
+            width: 100vw; 
+            height: 100%; /* 強制每張圖撐滿螢幕高度 */
+            object-fit: cover; /* 關鍵：裁切左右以鋪滿上下 */
+            scroll-snap-align: start; 
+            display: block; 
+        }
+
+        /* 毛玻璃卡片修正 */
+        .info-card {
+            position: absolute; 
+            bottom: calc(var(--safe-bottom) + 20px); left: 20px; right: 20px; 
+            background: rgba(15, 15, 15, 0.65); 
+            -webkit-backdrop-filter: blur(30px) saturate(180%);
+            backdrop-filter: blur(30px) saturate(180%);
+            border-radius: 24px; padding: 25px; 
+            border: 1px solid rgba(255,255,255,0.15); z-index: 10;
+            transform: translateZ(0);
+        }
+
+        .btn-float-back {
+            position: absolute; bottom: calc(var(--safe-bottom) + 165px); right: 30px; 
+            width: 50px; height: 50px; background: var(--amber); border-radius: 50%; 
+            display: flex; align-items: center; justify-content: center; z-index: 20; border: none;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+        }
+        
+        .card-name { font-family: var(--serif); font-size: 1.8rem; color: var(--amber); margin: 0; }
+        .data-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 18px; text-align: center; }
+        .v { font-family: var(--sans); font-weight: 700; color: #fff; font-size: 1.3rem; }
+        .label { font-size: 0.6rem; color: rgba(255,255,255,0.7); letter-spacing: 2px; text-transform: uppercase; }
+
+    </style>
+</head>
+<body>
+
+<div class="main-container" id="mainContainer">
+    <div class="page cover-page">
+        <div class="cover-masthead">
+            <h1>MUSEUM</h1>
+            <p style="letter-spacing:5px; font-size:0.7rem; opacity:0.8; margin-top:15px;">2026 PREMIUM COLLECTION</p>
+        </div>
+        <div class="cover-footer">
+            <span style="color:var(--amber); font-weight:700; font-family:var(--sans);">ISSUE 01</span>
+            <h2>女優<br>精選</h2>
+        </div>
+    </div>
+
+    <div class="page index-page">
+        <div class="index-header">CONTENTS</div>
+        <div id="menuList" class="menu-list"></div>
+    </div>
+</div>
+
+<script>
+const actressData = [
+    { name: "瀨戶環奈", h: 170, cup: "J", bwh: "101-59-91", photoCount: 3 },
+    { name: "櫻空桃", h: 160, cup: "G", bwh: "90-55-86", photoCount: 5 },
+    { name: "三田真鈴", h: 157, cup: "F", bwh: "77-55-89", photoCount: 4 },
+    { name: "涼森玲夢", h: 160, cup: "F", bwh: "87-58-85", photoCount: 4 },
+    { name: "石川澪", h: 158, cup: "B", bwh: "78-56-85", photoCount: 4 },
+    { name: "鷲尾芽衣", h: 165, cup: "J", bwh: "104-59-89", photoCount: 3 },
+    { name: "村上悠華", h: 163, cup: "E", bwh: "85-59-88", photoCount: 4 },
+    { name: "五日市芽依", h: 161, cup: "G", bwh: "88-59-89", photoCount: 4 },
+    { name: "miru", h: 157, cup: "E", bwh: "82-54-84", photoCount: 4 },
+    { name: "七嶋 舞", h: 160, cup: "D", bwh: "84-58-85", photoCount: 4 },
+    { name: "長浜蜜璃", h: 161, cup: "G", bwh: "90-58-90", photoCount: 4 },
+    { name: "三佳詩", h: 165, cup: "F", bwh: "85-55-87", photoCount: 4 },
+    { name: "福田悠亞", h: 162, cup: "H", bwh: "90-55-90", photoCount: 4 },
+    { name: "西宮夢", h: 158, cup: "D", bwh: "85-56-86", photoCount: 4 },
+    { name: "彩月七緒", h: 164, cup: "H", bwh: "92-59-84", photoCount: 4 },
+    { name: "凪ひかる", h: 162, cup: "K", bwh: "105-58-88", photoCount: 4 },
+    { name: "小宵こなん", h: 164, cup: "H", bwh: "96-59-94", photoCount: 4 },
+    { name: "白上咲花", h: 168, cup: "C", bwh: "83-57-89", photoCount: 4 },
+    { name: "百田光稀", h: 166, cup: "J", bwh: "100-57-89", photoCount: 4 },
+    { name: "九野ひなの", h: 157, cup: "G", bwh: "90-60-88", photoCount: 4 },
+    { name: "河合あすな", h: 158, cup: "H", bwh: "88-59-89", photoCount: 4 },
+    { name: "桃乃木かな", h: 153, cup: "F", bwh: "89-58-83", photoCount: 4 }
+];
+
+const container = document.getElementById('mainContainer');
+const menuList = document.getElementById('menuList');
+
+actressData.forEach((item, index) => {
+    const actressNum = index + 1; 
+    
+    // 目錄
+    const menuLink = document.createElement('div');
+    menuLink.className = 'menu-item';
+    menuLink.innerHTML = `<div><span style="color:var(--amber); font-weight:900; margin-right:12px;">${String(actressNum).padStart(2,'0')}</span> ${item.name}</div> <span>→</span>`;
+    menuLink.onclick = () => container.scrollTo({ left: window.innerWidth * (index + 2), behavior: 'smooth' });
+    menuList.appendChild(menuLink);
+
+    // 分頁
+    let photosHTML = "";
+    for (let i = 1; i <= item.photoCount; i++) {
+        photosHTML += `<img src="./img/${actressNum}-${i}.jpg" class="full-img" onerror="this.src='https://via.placeholder.com/1000x2000?text=IMAGE+MISSING';">`;
+    }
+
+    const page = document.createElement('div');
+    page.className = 'page';
+    page.innerHTML = `
+        <div class="actress-photo-container">${photosHTML}</div>
+        <button class="btn-float-back" onclick="container.scrollTo({left:window.innerWidth, behavior:'smooth'})">🏠</button>
+        <div class="info-card">
+            <h2 class="card-name">${item.name}</h2>
+            <div style="font-size:0.8rem; color:rgba(255,255,255,0.7); margin-top:4px; font-family:var(--sans);">${item.h}cm / ${item.cup} Cup</div>
+            <div class="data-grid">
+                <div class="data-item"><span class="label">Bust</span><span class="v">${item.bwh.split('-')[0]}</span></div>
+                <div class="data-item"><span class="label">Waist</span><span class="v">${item.bwh.split('-')[1]}</span></div>
+                <div class="data-item"><span class="label">Hips</span><span class="v">${item.bwh.split('-')[2]}</span></div>
+            </div>
+        </div>
+    `;
+    container.appendChild(page);
+});
+</script>
+</body>
+</html>
