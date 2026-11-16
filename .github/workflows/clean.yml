@@ -1,5 +1,10 @@
-name: Clean 46 Images
-on: workflow_dispatch
+name: Clean Images by Prefix
+on:
+  workflow_dispatch:
+    inputs:
+      prefix:
+        description: '要刪除的檔名開頭 (例如 47- 或 test-)'
+        required: true
 permissions:
   contents: write
 jobs:
@@ -8,9 +13,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: |
-          rm -f img/46-*.jpg img/46-*.png img/46-*.jpeg
+          rm -f img/${{ github.event.inputs.prefix }}*.jpg img/${{ github.event.inputs.prefix }}*.png img/${{ github.event.inputs.prefix }}*.jpeg
           git config user.name "github-actions"
           git config user.email "actions@github.com"
           git add -A
-          git commit -m "Remove 46-1 to 46-114" || exit 0
+          git commit -m "Remove ${{ github.event.inputs.prefix }}* images" || exit 0
           git push
