@@ -1,0 +1,16 @@
+name: Clean 46 Images
+on: workflow_dispatch
+permissions:
+  contents: write
+jobs:
+  delete:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: |
+          rm -f img/46-*.jpg img/46-*.png img/46-*.jpeg
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+          git add -A
+          git commit -m "Remove 46-1 to 46-114" || exit 0
+          git push
