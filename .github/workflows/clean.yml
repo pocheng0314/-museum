@@ -1,9 +1,9 @@
-name: Clean Images by Prefix
+name: Clean All Images by Prefix
 on:
   workflow_dispatch:
     inputs:
       prefix:
-        description: '要刪除的檔名開頭 (例如 47- 或 test-)'
+        description: '要刪除的檔名開頭 (例如 54- 或 46-)'
         required: true
 permissions:
   contents: write
@@ -13,9 +13,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: |
-          rm -f img/${{ github.event.inputs.prefix }}*.jpg img/${{ github.event.inputs.prefix }}*.png img/${{ github.event.inputs.prefix }}*.jpeg
+          find . -type f \( -name "${{ github.event.inputs.prefix }}*.jpg" -o -name "${{ github.event.inputs.prefix }}*.png" -o -name "${{ github.event.inputs.prefix }}*.jpeg" \) -delete
           git config user.name "github-actions"
           git config user.email "actions@github.com"
           git add -A
-          git commit -m "Remove ${{ github.event.inputs.prefix }}* images" || exit 0
+          git commit -m "Remove images starting with ${{ github.event.inputs.prefix }} across repository" || exit 0
           git push
